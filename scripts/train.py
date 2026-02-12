@@ -26,6 +26,26 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.ml.model import LSTMClassifier  # noqa: E402
+
+# Backwards-compatibility exports
+# Some local scripts (e.g. live_predict.py) import these symbols from scripts.train.
+LSTMModel = LSTMClassifier
+
+try:  # pragma: no cover
+    from app.ml.transformer_model import TransformerClassifier as TransformerModel  # noqa: E402
+except Exception:  # pragma: no cover
+    TransformerModel = None  # type: ignore[assignment]
+
+try:  # pragma: no cover
+    from app.ml.stgcn_model import STGCNClassifier as STGCNModel  # noqa: E402
+except Exception:  # pragma: no cover
+    STGCNModel = None  # type: ignore[assignment]
+
+__all__ = [
+    "LSTMModel",
+    "TransformerModel",
+    "STGCNModel",
+]
 from app.ml.preprocess import (  # noqa: E402
     add_gaussian_jitter,
     resample_sequence_linear,
