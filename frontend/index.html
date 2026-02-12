@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ISL Assist AI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>ISL Assist AI</h1>
+      <p>Real-Time Indian Sign Language Recognition</p>
+    </header>
+
+    <main class="container">
+      <section class="panel">
+        <div class="videoWrap">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="canvas" class="hidden"></canvas>
+        </div>
+
+        <div class="controls">
+          <label class="row">
+            Backend URL
+            <input id="backendUrl" type="text" value="http://localhost:8000" />
+          </label>
+
+          <div class="rowBtns">
+            <button id="startBtn">Start</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="clearBtn">Clear</button>
+          </div>
+
+          <div class="stats">
+            <div><span class="k">Prediction:</span> <span id="pred">-</span></div>
+            <div><span class="k">Confidence:</span> <span id="conf">-</span></div>
+            <div><span class="k">Status:</span> <span id="status">Idle</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Text Output</h2>
+        <div id="output" class="output"></div>
+        <div class="rowBtns">
+          <button id="speakBtn">Speak</button>
+        </div>
+
+        <div class="feedback">
+          <h3>Dataset Recorder (Phase-1)</h3>
+          <div class="row">
+            Label to save (uses last 30 buffered frames)
+            <input id="correctLabel" type="text" placeholder="e.g., HELLO" />
+          </div>
+          <div class="rowBtns">
+            <button id="sendFeedbackBtn">Save Sample</button>
+          </div>
+          <p class="hint">Keep your hand steady until the buffer reaches 30, then click Save Sample.</p>
+        </div>
+        <p class="hint">
+          Duplicate word filtering is applied automatically. The app appends a word only when it changes
+          and confidence is above threshold.
+        </p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

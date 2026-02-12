@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+artifacts/
+logs/
+*.pt
+*.onnx
+*.npy
+*.npz
+*.csv

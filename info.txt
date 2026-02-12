@@ -1,0 +1,126 @@
+Innovative Features for an ISL Assistive System
+Graph-Based Skeleton Models (Publication-worthy): Instead of raw CNNs on video frames, use
+graph neural networks on hand‐/body‐keypoints to capture spatial structure. For example, a Hand￾Aware GCN can explicitly model hand topology and motion, jointly using global body and local hand
+joints . Multi-stream graph networks (joints, bones, motion) have achieved state-of-the-art
+accuracy on sign datasets by focusing on the kinematic structure . This goes beyond MediaPipe’s
+out-of-the-box features and can better handle occlusions and complex hand articulations.
+Transformer/Attention Architectures (Publication-worthy): Apply transformer-based models to
+capture long-range dependencies in gesture sequences. Vision Transformers like SignViT (ViT
+backbone) have obtained ~99% accuracy on hand-gesture datasets , outperforming CNNs on
+visually similar signs. For continuous sign sequences, Conformer (convolution+self-attention)
+models can be adapted for sign recognition. For example, Aloysius et al. (2024) pre-trained a
+Conformer on sign data and achieved SOTA on benchmark CSLR tasks . These models handle
+temporal context more effectively than frame-by-frame CNNs.
+Multimodal Fusion of Non-Manual Cues (Publication-worthy): Incorporate facial expressions and
+lip movements as extra input channels. ISL (like all sign languages) uses non-manual signals heavily.
+A recent model integrates hand-skeleton features with facial-expression features (via a “Self-Cure
+Network”) and shows improved accuracy and robustness . Similarly, a unified sign+lip model was
+shown to boost performance: explicitly modeling lip movements as a separate modality significantly
+improves translation accuracy by capturing grammar cues . Adding head pose/eye gaze or
+combining audio–video (if context allows) could further reduce ambiguity. 
+Reinforcement Learning for Real-Time Segmentation (Publication-worthy): Treat gesture
+spotting as an online decision problem. Frame-by-frame classification with “wait/segment/classify”
+actions can be optimized via an RL-based Markov Decision Process (MDP). For instance, a context￾aware reward (small penalty for delay, big reward for correct early classification) raised sign accuracy
+from ~81% to ~88% in an MDP experiment . This approach balances speed vs. accuracy and is
+rarely used in SLR. A student project could implement RL (or Markov chain optimization ) to
+dynamically segment and recognize signs with minimal latency.
+Personalization & Meta-Learning (Publication-worthy): Adapt the model to each user’s style,
+hand shape, and speed. One approach is few-shot or meta-learning: e.g. use a prototypical ST-GCN
+that quickly learns new signs from a few examples. Recent work shows a few-shot video model
+outperforming a standard classifier by ~13% on large sign benchmarks , indicating better
+generalization. Genetic or niche algorithms can also tune model parameters per user to handle
+signer variability . In practice, a calibration phase could ask the user to perform a small set of
+signs and adjust the model (or transform skeleton scales). Additionally, training with random speed
+scaling makes the model invariant to signing speed .
+• 
+1
+1
+• 
+2
+3
+• 
+4
+5
+• 
+6
+7
+• 
+8
+7
+9
+1
+Interactive Feedback Loop: Allow users to correct or rate the system’s output. An interactive web
+interface could display the recognized word/phrase and let the user confirm or correct it. These
+corrections can be used to fine-tune the model on-the-fly (active learning). Though less common in
+published systems, this personalization loop can drastically improve practical accuracy for an
+individual user’s idiosyncratic signing. (This aligns with “subject-independent” recognition efforts
+by iteratively incorporating new signer data.)
+Synthetic Data Augmentation: Expand training data with generated or augmented sign videos. For
+example, leverage Sign Language Production (SLP) networks or GANs to synthesize new sign
+sequences from text/gloss, as proposed in recent research. Adobe Firefly or other generative models
+can create varied RGB sign videos for rare gestures . This underexplored idea could address ISL’s
+data scarcity. Combined with standard image/video augmentations (cropping, background changes,
+speed jittering), synthetic data can improve model robustness.
+Leveraging New ISL Benchmarks: Use the latest large ISL datasets and tools. In 2023–24, several
+corpora were released: iSign (118K+ ISL video-English pairs) , ISLTranslate (31K continuous ISL
+sentence pairs) , and CISLR (≈4700 ISL word signs) . Training or pre-training on these can
+significantly boost accuracy. Also use open-source pose libraries (e.g. OpenHands provides large ISL
+pose pretraining data) . By contrast, older projects often relied on tiny self-collected datasets.
+Incorporating these rich benchmarks and pre-trained models (e.g. cross-lingual ASL transfer) is a
+low-effort way to innovate.
+Cross-Language Transfer: Apply knowledge from other sign languages. CISLR showed that features
+learned on ASL help one-shot learning in ISL . Similarly, pose-models pre-trained on Turkish or
+Chinese sign (as in OpenHands) can be fine-tuned for ISL . A novel idea is multilingual training
+(even multilingual translation models) where ISL is one branch. This can improve accuracy in low￾resource ISL by “standing on the shoulders” of better-resourced sign languages.
+Emotion and Sentiment Context: Integrate emotion recognition to add nuance. Facial expression
+not only aids grammatical interpretation but conveys tone (e.g. anger, question). Emerging datasets
+like EmoSign (ASL videos labeled with emotion) highlight this dimension. By detecting signers’ affect
+(via facial AUs or expression classifiers) and tagging output with sentiment, the system could output
+more informative translations (“I’m upset: that happened” rather than dry text). This feature is rarely
+seen in basic SLR projects but would make the system more human–centric and innovative.
+Each of the above ideas goes beyond standard CNN/Mediapipe baselines and would make a student project
+stand out. They combine recent research (e.g. transformers , RL , pose pretraining ) with
+practical web-app implementation, pushing toward publication-level novelty.
+Sources: State-of-the-art methods and datasets are cited above .
+Many suggestions (e.g. RL or synthesis) remain underexplored in ISL specifically. 
+Hand-aware graph convolution network for skeleton-based sign language recognition - ScienceDirect
+https://www.sciencedirect.com/science/article/pii/S294971592400074X
+SignViT: An enhanced vision transformer framework for Attention-Based sign language hand gesture
+recognition - ScienceDirect
+https://www.sciencedirect.com/science/article/abs/pii/S1746809425011139
+Continuous Sign Language Recognition with Adapted Conformer via Unsupervised Pretraining
+https://arxiv.org/html/2405.12018v1
+[2407.02241] Sign Language Recognition Based On Facial Expression and Hand Skeleton This work was
+supported by Southeast University Innovation and Entrepreneurship Program (202210286057Z). Zhiyu
+Long, Xingyou Liu and Jiaqi Qiao are with the School of Automation and Zhi Li is with the School of
+Electronic Science and Engineering, Southeast University, Nanjing, China, 210096. Zhiyu Long and Xingyou
+Liu are co-first authors. The authorship was determined by a coin toss.
+https://ar5iv.org/pdf/2407.02241
+[2508.20476] Towards Inclusive Communication: A Unified Framework for Generating Spoken Language
+from Sign, Lip, and Audio
+https://arxiv.org/abs/2508.20476
+Adaptive Sign Language Recognition for Deaf Users: Integrating Markov Chains with Niching
+Genetic Algorithm | MDPI
+https://www.mdpi.com/2673-2688/6/8/189
+Data-Efficient American Sign Language Recognition via Few-Shot Prototypical Networks
+https://arxiv.org/html/2512.10562v1
+Exploring Sign Language Dataset Augmentation with Generative ...
+https://www.mdpi.com/2078-2489/16/9/799
+(PDF) ISLTranslate: Dataset for Translating Indian Sign Language
+https://www.researchgate.net/publication/372918922_ISLTranslate_Dataset_for_Translating_Indian_Sign_Language
+CISLR: Corpus for Indian Sign Language Recognition - ACL Anthology
+https://aclanthology.org/2022.emnlp-main.707/
+OpenHands: Making Sign Language Recognition Accessible with Pose-based Pretrained Models across
+Languages - ACL Anthology
+https://aclanthology.org/2022.acl-long.150/
+2
+3
+4
+5
+6 7 10
+8 9
+11
+12 13
+14
+15
+3

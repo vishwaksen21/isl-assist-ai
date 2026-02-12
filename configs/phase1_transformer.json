@@ -1,0 +1,20 @@
+{
+  "arch": "transformer",
+  "epochs": 30,
+  "batch_size": 64,
+  "lr": 0.001,
+  "dropout": 0.3,
+  "num_layers": 4,
+  "d_model": 128,
+  "nhead": 4,
+  "dim_feedforward": 256,
+  "max_len": 64,
+  "early_stop_patience": 7,
+  "val_ratio": 0.15,
+  "test_ratio": 0.15,
+  "seed": 42,
+  "aug_time_warp": true,
+  "aug_flip": true,
+  "aug_jitter": true,
+  "use_class_weights": true
+}

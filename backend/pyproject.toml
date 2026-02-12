@@ -1,0 +1,5 @@
+[project]
+name = "isl-assist-ai"
+version = "0.1.0"
+description = "ISL Assist AI – Real-Time Indian Sign Language Recognition System"
+requires-python = ">=3.10"
