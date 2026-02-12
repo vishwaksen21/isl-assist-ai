@@ -1,38 +1,60 @@
-import cv2
-import torch
-import numpy as np
-import json
-from collections import deque
-import mediapipe as mp
+from __future__ import annotations
 
-# ---- Import model builders from train.py ----
-from scripts.train import LSTMModel, TransformerModel, STGCNModel
+from collections import deque
+import json
+from pathlib import Path
+import sys
+
+import cv2
+import mediapipe as mp
+import numpy as np
+import torch
+
+# Allow running from repo root (so `import app.*` works)
+sys.path.append(str(Path(__file__).resolve().parent / "backend"))
+
+from app.ml.factory import build_model_from_config  # noqa: E402
+from app.ml.preprocess import sequence_to_model_input  # noqa: E402
+
+
+def load_labels(labels_path: str | Path) -> list[str]:
+    """Load labels from artifacts.
+
+    Supported formats:
+    - {"labels": ["HELLO", ...]}  (current)
+    - {"HELLO": 0, "YES": 1, ...} (legacy)
+    - ["HELLO", "YES", ...]       (legacy)
+    """
+    p = Path(labels_path)
+    payload = json.loads(p.read_text(encoding="utf-8"))
+
+    if isinstance(payload, dict) and "labels" in payload and isinstance(payload["labels"], list):
+        return [str(x) for x in payload["labels"]]
+
+    if isinstance(payload, dict):
+        # assume label->index mapping
+        pairs = [(str(k), int(v)) for k, v in payload.items()]
+        pairs.sort(key=lambda kv: kv[1])
+        return [k for k, _ in pairs]
+
+    if isinstance(payload, list):
+        return [str(x) for x in payload]
+
+    raise ValueError(f"Unsupported labels.json format: {type(payload)}")
+
 
 # ---- Load checkpoint ----
-checkpoint = torch.load("artifacts/model.pt", map_location="cpu")
+# Explicit weights_only=False to avoid FutureWarning and because this checkpoint includes non-tensor config.
+checkpoint = torch.load("artifacts/model.pt", map_location="cpu", weights_only=False)
 cfg = checkpoint["config"]
 state_dict = checkpoint["state_dict"]
 
 # ---- Load labels ----
-with open("artifacts/labels.json", "r") as f:
-    label_to_index = json.load(f)
+labels = load_labels("artifacts/labels.json")
 
-index_to_label = {v: k for k, v in label_to_index.items()}
-num_classes = len(label_to_index)
-
-# ---- Build model based on architecture ----
-arch = cfg["arch"]
-
-if arch == "lstm":
-    model = LSTMModel(num_classes=num_classes)
-elif arch == "transformer":
-    model = TransformerModel(num_classes=num_classes)
-elif arch == "stgcn":
-    model = STGCNModel(num_classes=num_classes)
-else:
-    raise ValueError("Unknown architecture")
-
-model.load_state_dict(state_dict)
+# ---- Build model based on checkpoint config ----
+model = build_model_from_config(cfg).to("cpu")
+model.load_state_dict(state_dict, strict=True)
 model.eval()
 
 # ---- MediaPipe setup ----
@@ -45,6 +67,19 @@ hands = mp_hands.Hands(
 )
 
 cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    raise SystemExit(
+        "ERROR: Could not open webcam (camera index 0).\n\n"
+        "This is common in dev containers / remote environments where /dev/video0 is not exposed.\n"
+        "Options:\n"
+        "  1) Run locally on your host OS (not inside the container).\n"
+        "  2) If using Docker directly, pass the device through (example):\n"
+        "       docker run --device=/dev/video0 ...\n"
+        "  3) Use the browser-based webcam pipeline instead:\n"
+        "       - start backend:  cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000\n"
+        "       - start frontend: cd frontend && python -m http.server 5173\n"
+        "       - open http://localhost:5173\n"
+    )
 sequence = deque(maxlen=30)
 
 print("Press Q to quit | Press R to reset buffer")
@@ -68,14 +103,15 @@ while True:
         sequence.append(landmarks)
 
         if len(sequence) == 30:
-            input_data = np.array(sequence)
-            input_data = torch.tensor(input_data, dtype=torch.float32)
-            input_data = input_data.unsqueeze(0)
+            # Convert raw MediaPipe landmarks (30,21,3) -> model input (30,63)
+            raw_seq = np.asarray(sequence, dtype=np.float32)
+            x = sequence_to_model_input(raw_seq, flip_x_raw01=False)  # (30,63)
+            input_data = torch.from_numpy(x).unsqueeze(0)  # (1,30,63)
 
             with torch.no_grad():
-                output = model(input_data)
-                pred = torch.argmax(output, dim=1).item()
-                label = index_to_label[pred]
+                logits = model(input_data)
+                pred = int(torch.argmax(logits, dim=1).item())
+                label = labels[pred] if 0 <= pred < len(labels) else "?"
 
             cv2.putText(frame, label, (10, 40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1,
