@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 import cv2
 import numpy as np
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
 from app.core.config import settings
 from app.ml.inference import SignPredictor
@@ -30,20 +30,38 @@ seq_buffer = SessionSequenceBuffer(
 )
 
 _predictor: Optional[SignPredictor] = None
+_predictor_signature: Optional[tuple[int, int, str]] = None
+
+
+def _artifact_signature() -> tuple[int, int, str]:
+    return (
+        _MODEL_PATH.stat().st_mtime_ns,
+        _LABELS_PATH.stat().st_mtime_ns,
+        settings.inference_device,
+    )
 
 
 def _get_predictor() -> SignPredictor:
     global _predictor
-    if _predictor is None:
-        if not _MODEL_PATH.exists() or not _LABELS_PATH.exists():
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Model artifacts not found. Train first to create "
-                    f"{_MODEL_PATH} and {_LABELS_PATH}."
-                ),
-            )
-        _predictor = SignPredictor(_MODEL_PATH, _LABELS_PATH, device="cpu")
+    global _predictor_signature
+
+    if not _MODEL_PATH.exists() or not _LABELS_PATH.exists():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Model artifacts not found. Train first to create "
+                f"{_MODEL_PATH} and {_LABELS_PATH}."
+            ),
+        )
+
+    sig = _artifact_signature()
+    if _predictor is None or _predictor_signature != sig:
+        _predictor = SignPredictor(
+            _MODEL_PATH,
+            _LABELS_PATH,
+            device=settings.inference_device,
+        )
+        _predictor_signature = sig
     return _predictor
 
 
@@ -56,6 +74,7 @@ def new_session() -> Dict[str, str]:
 async def predict_from_frame(
     frame: UploadFile = File(...),
     session_id: str = Form(...),
+    debug: bool = Query(False, description="Include hand landmarks in the response"),
 ) -> Dict[str, Any]:
     data = await frame.read()
     img_np = np.frombuffer(data, dtype=np.uint8)
@@ -71,22 +90,30 @@ async def predict_from_frame(
             "buffer_size": 0,
         }
 
+    landmarks_xy = None
+    if debug:
+        # Return (21,2) in MediaPipe normalized coords to visualize on the client.
+        landmarks_xy = landmarks[:, :2].astype(np.float32, copy=False).tolist()
+
     keypoints_63 = normalize_and_flatten_frame(landmarks)
     buf_size = seq_buffer.add_frame(session_id, keypoints_63, landmarks)
 
     seq = seq_buffer.get_sequence(session_id)
     if seq is None:
-        return {
+        resp: Dict[str, Any] = {
             "detected": True,
             "session_id": session_id,
             "buffer_size": buf_size,
             "ready": False,
         }
+        if landmarks_xy is not None:
+            resp["landmarks"] = landmarks_xy
+        return resp
 
     predictor = _get_predictor()
     label, conf, dist = predictor.predict(seq)
 
-    return {
+    resp = {
         "detected": True,
         "ready": True,
         "session_id": session_id,
@@ -95,6 +122,9 @@ async def predict_from_frame(
         "confidence": conf,
         "distribution": dist,
     }
+    if landmarks_xy is not None:
+        resp["landmarks"] = landmarks_xy
+    return resp
 
 
 @router.post("/session/reset")

@@ -40,6 +40,7 @@ body {
 }
 
 .videoWrap {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -50,7 +51,84 @@ video {
   width: 100%;
   height: auto;
   background: #000;
+  transform: scaleX(-1);
 }
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rowInline {
+  grid-auto-flow: column;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.labelGuide {
+  margin: 10px 0 8px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.12);
+}
+
+.labelGuideTitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.labelGuideText {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.labelGuideAnim {
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.labelGuideAnim .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.8);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.labelGuideAnim.is-hidden { display: none; }
+
+@keyframes cue-wave {
+  0%, 100% { transform: translate(-50%, -50%) translateX(-28px); }
+  50% { transform: translate(-50%, -50%) translateX(28px); }
+}
+
+@keyframes cue-nod {
+  0%, 100% { transform: translate(-50%, -50%) translateY(-6px); }
+  50% { transform: translate(-50%, -50%) translateY(6px); }
+}
+
+@keyframes cue-pinch {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+  50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1.0; }
+}
+
+.labelGuideAnim.cue-wave .dot { animation: cue-wave 0.9s ease-in-out infinite; }
+.labelGuideAnim.cue-nod .dot { animation: cue-nod 0.8s ease-in-out infinite; }
+.labelGuideAnim.cue-pinch .dot { animation: cue-pinch 0.85s ease-in-out infinite; }
 
 .controls {
   margin-top: 12px;

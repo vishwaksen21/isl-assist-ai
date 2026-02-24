@@ -16,6 +16,7 @@
       <section class="panel">
         <div class="videoWrap">
           <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay" class="overlay"></canvas>
           <canvas id="canvas" class="hidden"></canvas>
         </div>
 
@@ -30,6 +31,11 @@
             <button id="stopBtn" disabled>Stop</button>
             <button id="clearBtn">Clear</button>
           </div>
+
+          <label class="row rowInline">
+            <input id="showLandmarks" type="checkbox" checked />
+            Show hand detection overlay
+          </label>
 
           <div class="stats">
             <div><span class="k">Prediction:</span> <span id="pred">-</span></div>
@@ -48,12 +54,20 @@
 
         <div class="feedback">
           <h3>Dataset Recorder (Phase-1)</h3>
+          <div class="labelGuide">
+            <div class="labelGuideTitle">Guide</div>
+            <div id="labelGuideText" class="labelGuideText">Enter a label to see a cue.</div>
+            <div id="labelGuideAnim" class="labelGuideAnim is-hidden">
+              <div class="dot"></div>
+            </div>
+          </div>
           <div class="row">
             Label to save (uses last 30 buffered frames)
             <input id="correctLabel" type="text" placeholder="e.g., HELLO" />
           </div>
           <div class="rowBtns">
             <button id="sendFeedbackBtn">Save Sample</button>
+            <button id="resetBufferBtn" type="button">Reset Buffer</button>
           </div>
           <p class="hint">Keep your hand steady until the buffer reaches 30, then click Save Sample.</p>
         </div>

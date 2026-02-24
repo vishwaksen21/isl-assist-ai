@@ -12,6 +12,9 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY backend /app/backend
 COPY artifacts /app/artifacts
 
+# Ensure these exist even if artifacts are empty (model may be mounted at runtime)
+RUN mkdir -p /app/artifacts /app/data/raw
+
 ENV PYTHONPATH=/app/backend
 
 EXPOSE 8000

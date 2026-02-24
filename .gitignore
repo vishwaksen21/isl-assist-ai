@@ -11,3 +11,6 @@ logs/
 *.npy
 *.npz
 *.csv
+
+# Keep empty directories needed by Docker/UX
+!artifacts/.gitkeep

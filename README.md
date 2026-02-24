@@ -38,6 +38,33 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Quick Run (one command)
+
+If you already installed dependencies and have trained artifacts, you can start
+both backend + frontend together:
+
+```bash
+bash scripts/run_all.sh
+```
+
+Then open http://localhost:5173
+
+Note: the backend requires `artifacts/model.pt` + `artifacts/labels.json`. If
+they are missing, train first (see "Model Training").
+
+## Keep backend always-on (macOS optional)
+
+If you want the backend to start automatically on login (so you don't manually
+start it every time), you can install a LaunchAgent:
+
+```bash
+chmod +x scripts/macos/install_backend_launchagent.sh
+./scripts/macos/install_backend_launchagent.sh
+```
+
+This expects your Python environment at `.venv/`.
+Logs: `tail -f /tmp/isl-assist-ai-backend.log`
+
 Troubleshooting (Linux/dev containers):
 - If you see `ImportError: libGL.so.1: cannot open shared object file`, you’re using GUI OpenCV wheels.
 	- Recommended: use the repo default `opencv-python-headless` by reinstalling deps:
@@ -283,13 +310,17 @@ Note: Achieving >90% accuracy depends on label set difficulty and data quality (
 
 ### Option A: Docker (simple)
 
-1) Train locally and copy artifacts into `artifacts/` (or mount them in production)
+1) Train locally and put artifacts into `artifacts/` (or mount them in production)
 2) Build and run:
 
 ```bash
 docker build -t isl-assist-ai .
 docker run --rm -p 8000:8000 isl-assist-ai
 ```
+
+Notes:
+- The image includes an empty `artifacts/` directory by default; if you haven't trained yet, the API will return **503** until `artifacts/model.pt` and `artifacts/labels.json` exist.
+- For production, prefer mounting your trained `artifacts/` into the container.
 
 ### Option B: VM/Server (no Docker)
 

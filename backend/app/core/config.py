@@ -10,6 +10,7 @@ class Settings(BaseModel):
     # Inference
     seq_len: int = 30
     min_confidence: float = 0.60
+    inference_device: str = "cpu"  # cpu|cuda|mps (best-effort)
 
     # Session buffer
     session_ttl_seconds: int = 30
