@@ -192,7 +192,24 @@ async function createSession() {
 }
 
 async function startCamera() {
-  stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error(
+      'Camera API not available (getUserMedia). Open the frontend using http://localhost:5173 (not file:// and not a remote IP). Use Chrome/Edge and allow camera permission.'
+    );
+  }
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  } catch (e) {
+    const name = e && typeof e === 'object' && 'name' in e ? e.name : '';
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+      throw new Error('Camera permission denied. Allow camera access in the browser and reload.');
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      throw new Error('No camera found. Connect/enable a webcam and reload.');
+    }
+    throw e;
+  }
   video.srcObject = stream;
   await video.play();
   ensureOverlaySize();
